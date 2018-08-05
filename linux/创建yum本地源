@@ -1,0 +1,146 @@
+http://linuxme.blog.51cto.com/1850814/353108   
+
+
+
+
+第一种方法：创建Yum的本地源，并以此管理rpm包(RHEL5.4)
+
+
+1、以下是为启用yum及相关功能所需的rpm包，请确保已经事先安装完备；您的系统中相关rpm包的版本可能有所不同。
+
+yum-3.2.19-18.el5
+yum-security-1.1.16-13.el5
+yum-updatesd-0.9-2.el5
+yum-rhn-plugin-0.5.3-30.el5
+yum-metadata-parser-1.1.2-2.el5
+createrepo-0.4.11-3.el5
+
+2、创建本地目标做为yum源的repository，并将系统光盘上的相关rpm等拷贝至此目录中：
+:q
+
+# mkdir  /yums
+# mount  /dev/cdrom  /media/cdrom
+# cp -a  /media/cdrom/Server  /yums/
+ cp 
+
+3、拷贝密钥验正文件，并创建包依赖关系
+
+# cp  /media/cdrom/RPM-GPG-KEY-redhat-release   /yums/
+# createrepo -g  /yums/Server/repodata/comps-rhel5-server-core.xml  /yums/Server/
+
+如果要对Cluster,ClusterStorage作yum源，进行相同的操作
+
+4、新增yum源为刚建立的源：
+
+编辑/etc/yum.repos.d/localyum.repo，添加如下内容：
+
+[base]
+name=Local Yum Sourses
+baseurl=file:///yums/Server
+enable=1
+gpcheck=1
+gpgkey=file:///yums/RPM-GPG-KEY-redhat-release
+
+如果要对Cluster,ClusterStorage作yum源，在本文件后面，进行相应的操作
+
+说明：如果yum源是其它机器上的ftp或http等服务提供的，则需将其中的file://改为相对应的网络路径。
+
+
+
+
+
+　　第二种方法：http
+
+   第一步：
+
+　　#mount /dev/cdrom /mnt
+
+　　#cp   -r /mnt/. /var/ftp/pub/RHEL5
+
+　　第二步：
+ 
+　　我用createrepo －g 来创建
+
+　　# cd /var/ftp/pub/RHEL5/Server
+
+　　createrepo   -g /var/ftp/pub/RHEL5/Server/repodata/comps-rhel5-server-core.xml -v /var/ftp/pub/RHEL5/Server
+
+　　其他几个目录都是一样的方法
+
+　　第四步：
+
+　　我编写repo文件
+
+　　[server]
+
+　　name=server
+
+　　baseurl=http://192.168.0.101/rhel5
+
+　　enabled=1
+
+　　gpgcheck=0
+
+　　第五步：
+
+　　vim /etc/httpd/conf/httpd.conf
+   
+
+　　Alias /rhel5 "/var/ftp/pub/RHEL5"
+
+　　<Directory "/var/ftp/pub/RHEL5">
+
+　　Options Indexes MultiViews
+
+　　AllowOverride None
+
+　　Order allow,deny
+
+　　Allow from all
+
+　　</Directory>
+
+   重启httpd服务，就ok了
+
+　
+
+
+
+　第三种方法：
+
+　　就是使用vsftp作为仓库发布
+
+　　拷贝光盘内容 cp -prf /media/cdrom /var/ftp/rhel5
+
+　　[root@localhost ~]# cd /var/ftp/rhel5/Server/
+
+　　[root@localhost Server]# createrepo -g repodata/comps-rhel5-server-core.xml ./
+
+　　创建.repo配置文件。
+
+　　[root@localhost ~]# vi /etc/yum.repos.d/rhel5-rpms-from-lansvr.repo
+
+　　[Server]
+
+　　name=Server Directory
+
+　　baseurl=ftp://192.168.4.1/rhel5/Server
+
+　　enabled=1
+
+　　gpgcheck=0
+
+
+
+
+
+
+
+
+我的配置命令
+
+*.xml
+createrepo -g /var/ftp/pub/Neoshine/repodata/ -v /var/ftp/pub/Neoshine/
+
+
+
